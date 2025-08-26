@@ -18,7 +18,7 @@ import base64
 from werkzeug.utils import secure_filename
 import uuid
 from dotenv import load_dotenv
-
+import ssl
 # Load environment variables
 load_dotenv()
 
@@ -34,6 +34,12 @@ CORS(app, resources={
 # MongoDB Configuration
 MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/invoice_management')
 client = MongoClient(MONGODB_URI)
+client = MongoClient(
+    MONGODB_URI,
+    tls=True,
+    tlsAllowInvalidCertificates=True,
+    ssl_cert_reqs=ssl.CERT_NONE
+)
 db = client['invoice_management']
 
 # Collections
