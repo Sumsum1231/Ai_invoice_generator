@@ -1,5 +1,5 @@
 import os
-import json
+
 from flask import Flask, jsonify, request, abort, send_file, Response
 from flask_cors import CORS
 from pymongo import MongoClient, ASCENDING, DESCENDING
@@ -38,7 +38,7 @@ client = MongoClient(
     MONGODB_URI,
     tls=True,
     tlsAllowInvalidCertificates=True,
-    ssl_cert_reqs=ssl.CERT_NONE
+    
 )
 db = client['invoice_management']
 
