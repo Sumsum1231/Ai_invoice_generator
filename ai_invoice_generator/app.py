@@ -30,7 +30,7 @@ CORS(app, resources={
         "allow_headers": ["Content-Type", "Authorization"]
     }
 })
-
+CORS(app, origins=["https://ai-invoice-generator-psi.vercel.app"], supports_credentials=True)
 # MongoDB Configuration
 MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/invoice_management')
 client = MongoClient(MONGODB_URI)
