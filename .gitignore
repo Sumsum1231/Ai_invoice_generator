@@ -1,0 +1,29 @@
+# Backend (python Flask)
+ai_invoice_generator/venv/
+ai_invoice_generator/__pycache__/
+ai_invoice_generator/*.pyc
+ai_invoice_generator/*.pyo
+ai_invoice_generator/*.pyd
+ai_invoice_generator/.Python
+ai_invoice_generator/env/
+ai_invoice_generator/env.bak/
+ai_invoice_generator/instance/
+ai_invoice_generator/.env
+
+# Frontend (Node.js React)
+frontend-ai-invoive-generator/ai-invoice-ui/node_modules/
+frontend-ai-invoive-generator/ai-invoice-ui/build/
+frontend-ai-invoive-generator/ai-invoice-ui/.env
+frontend-ai-invoive-generator/ai-invoice-ui/.cache
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
