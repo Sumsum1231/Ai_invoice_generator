@@ -6,19 +6,21 @@ import GetAppIcon from '@mui/icons-material/GetApp';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
 const statusColors = {
   paid: 'success',
   partial: 'warning',
   unpaid: 'error',
 };
 
-const InvoiceList = ({ 
-  invoices = [], 
-  clients = [], 
-  onEdit, 
-  onDelete, 
+const InvoiceList = ({
+  invoices = [],
+  clients = [],
+  onEdit,
+  onDelete,
   loading: parentLoading = false,
-  formatCurrency 
+  formatCurrency
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -28,33 +30,33 @@ const InvoiceList = ({
   // Enhanced PDF download function with comprehensive error handling
   const downloadPDF = useCallback(async (invoiceId) => {
     setPdfLoading(prev => ({ ...prev, [invoiceId]: true }));
-    
+
     try {
       console.log(`🔥 Requesting PDF for Invoice ID: ${invoiceId}`);
-      
-      // Check if Flask server is reachable first
+
+      // Check if backend server is reachable first
       try {
-        const healthCheck = await fetch('http://localhost:5000/health', {
+        const healthCheck = await fetch(`${API_BASE_URL}/health`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
           },
         });
-        
+
         if (!healthCheck.ok) {
-          throw new Error('Flask server is not responding');
+          throw new Error('Backend server is not responding');
         }
-        
+
         const healthData = await healthCheck.json();
-        console.log('✅ Flask server is running:', healthData.status);
-        
+        console.log('✅ Backend server is running:', healthData.status);
+
       } catch (healthError) {
         console.error('❌ Health check failed:', healthError);
-        throw new Error('Flask PDF server is not running. Please start it on port 5000.');
+        throw new Error(`Backend PDF server is not running at ${API_BASE_URL}.`);
       }
-      
+
       // Make PDF request
-      const response = await fetch(`http://localhost:5000/invoices/${invoiceId}/pdf`, {
+      const response = await fetch(`${API_BASE_URL}/invoices/${invoiceId}/pdf`, {
         method: 'GET',
         headers: {
           'Accept': 'application/pdf,text/html,application/json',
@@ -65,9 +67,9 @@ const InvoiceList = ({
 
       if (!response.ok) {
         let errorMessage = 'Failed to generate PDF';
-        
+
         const contentType = response.headers.get('Content-Type');
-        
+
         if (contentType && contentType.includes('application/json')) {
           try {
             const errorData = await response.json();
@@ -80,13 +82,13 @@ const InvoiceList = ({
         } else {
           errorMessage = `Server error: ${response.status} - ${response.statusText}`;
         }
-        
+
         throw new Error(errorMessage);
       }
 
       const blob = await response.blob();
       console.log(`📄 PDF Blob size: ${blob.size} bytes, type: ${blob.type}`);
-      
+
       if (blob.size === 0) {
         throw new Error('Received empty file from server');
       }
@@ -94,10 +96,10 @@ const InvoiceList = ({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      
+
       const contentDisposition = response.headers.get('Content-Disposition');
       let filename = `invoice-${invoiceId}.pdf`;
-      
+
       if (contentDisposition) {
         console.log('📁 Content-Disposition:', contentDisposition);
         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
@@ -105,40 +107,40 @@ const InvoiceList = ({
           filename = filenameMatch[1].replace(/['"]/g, '');
         }
       }
-      
+
       if (blob.type.includes('html')) {
         filename = filename.replace('.pdf', '.html');
         console.log('📄 Downloading HTML fallback');
       } else if (blob.type.includes('pdf')) {
         console.log('📄 Downloading PDF file');
       }
-      
+
       link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       window.URL.revokeObjectURL(url);
       console.log('✅ File downloaded successfully:', filename);
-      
+
       setError('');
-      
+
     } catch (error) {
       console.error('❌ PDF download error:', error);
-      
+
       let userMessage = error.message;
-      
+
       if (error.message.includes('fetch')) {
-        userMessage = 'Cannot connect to PDF service. Make sure Flask server is running on port 5000.';
+        userMessage = `Cannot connect to PDF service. Make sure backend server is running at ${API_BASE_URL}.`;
       } else if (error.message.includes('JSON server')) {
         userMessage = 'Cannot connect to database. Make sure JSON server is running on port 3000.';
       }
-      
+
       setError(`PDF Error: ${userMessage}`);
     } finally {
       setPdfLoading(prev => ({ ...prev, [invoiceId]: false }));
     }
-  }, []);
+  }, [API_BASE_URL]);
 
   // Safe data processing with enhanced validation
   const rows = React.useMemo(() => {
@@ -146,7 +148,7 @@ const InvoiceList = ({
       console.warn('Invoices is not an array:', invoices);
       return [];
     }
-    
+
     return invoices.map(inv => {
       try {
         if (!inv || typeof inv !== 'object') {
@@ -154,7 +156,7 @@ const InvoiceList = ({
         }
 
         const client = Array.isArray(clients) ? clients.find(c => c.id === inv.for?.id) : null;
-        
+
         return {
           id: inv.id || Date.now(),
           invoiceNumber: inv.invoice_number || `#${inv.id || 'Unknown'}`,
@@ -188,7 +190,7 @@ const InvoiceList = ({
       if (isNaN(value) || value === null || value === undefined) {
         return `${currency} 0.00`;
       }
-      
+
       return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency,
@@ -202,7 +204,6 @@ const InvoiceList = ({
 
   const currencyFormatter = formatCurrency || defaultFormatCurrency;
 
-  // Fixed column generation - removed any button props
   const getColumns = useCallback(() => {
     const baseColumns = [
       { 
@@ -283,7 +284,6 @@ const InvoiceList = ({
       valueFormatter: (value, row) => currencyFormatter(value, row.currency),
     });
 
-    // ✅ FIXED: Actions column - removed any button props and fixed event handlers
     baseColumns.push({
       field: 'actions',
       headerName: 'Actions',
@@ -292,7 +292,7 @@ const InvoiceList = ({
       flex: isMobile ? 1 : 0,
       renderCell: (params) => {
         const { row } = params;
-        
+
         return (
           <Box sx={{ 
             display: 'flex', 
@@ -302,7 +302,6 @@ const InvoiceList = ({
             py: 0.5
           }}>
             {isMobile ? (
-              // Mobile: Icon buttons - FIXED
               <>
                 <IconButton 
                   size="small"
@@ -346,7 +345,6 @@ const InvoiceList = ({
                 </IconButton>
               </>
             ) : (
-              // Desktop: Text buttons - FIXED
               <>
                 <Button 
                   size="small" 

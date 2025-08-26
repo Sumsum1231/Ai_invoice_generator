@@ -56,7 +56,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // Validation schema
 const clientSchema = yup.object({
