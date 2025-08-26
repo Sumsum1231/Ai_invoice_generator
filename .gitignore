@@ -30,3 +30,4 @@ Thumbs.db
 # ------------ Logs ------------
 *.log
 logs/
+!frontend-ai-invoive-generator/ai-invoice-ui/
